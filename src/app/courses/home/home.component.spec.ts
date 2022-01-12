@@ -1,17 +1,17 @@
 import { ComponentFixture, fakeAsync, flush, flushMicrotasks, TestBed, tick, waitForAsync } from '@angular/core/testing';
-import {CoursesModule} from '../courses.module';
-import {DebugElement} from '@angular/core';
+import { CoursesModule } from '../courses.module';
+import { DebugElement } from '@angular/core';
 
-import {HomeComponent} from './home.component';
-import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
-import {CoursesService} from '../services/courses.service';
-import {HttpClient} from '@angular/common/http';
-import {COURSES} from '../../../../server/db-data';
-import {setupCourses} from '../common/setup-test-data';
-import {By} from '@angular/platform-browser';
-import {of} from 'rxjs';
-import {NoopAnimationsModule} from '@angular/platform-browser/animations';
-import {click} from '../common/test-utils';
+import { HomeComponent } from './home.component';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { CoursesService } from '../services/courses.service';
+import { HttpClient } from '@angular/common/http';
+import { COURSES } from '../../../../server/db-data';
+import { setupCourses } from '../common/setup-test-data';
+import { By } from '@angular/platform-browser';
+import { of } from 'rxjs';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { click } from '../common/test-utils';
 
 
 
@@ -33,7 +33,7 @@ fdescribe('HomeComponent', () => {
                 NoopAnimationsModule
             ],
             providers: [
-                {provide: CoursesService, useValue: coursesServiceSpy}
+                { provide: CoursesService, useValue: coursesServiceSpy }
             ]
         }).compileComponents().then(() => {
             fixture = TestBed.createComponent(HomeComponent);
@@ -58,7 +58,7 @@ fdescribe('HomeComponent', () => {
     });
 
     it('should display only advanced courses', () => {
-       
+
         coursesService.findAllCourses.and.returnValue(of(advancedCourses));
 
         fixture.detectChanges();
@@ -77,23 +77,34 @@ fdescribe('HomeComponent', () => {
     });
 
 
-    it('should display advanced courses when tab clicked', (done: DoneFn) => {
+    it('should display advanced courses when tab clicked - fakeAsync', fakeAsync(() => {
         coursesService.findAllCourses.and.returnValue(of(setupCourses()));
         fixture.detectChanges();
-        const tabs = el.queryAll(By.css('.mat-tab-label'));
+        const tabs = el.nativeElement.querySelectorAll('.mat-tab-label');
+        click(tabs[1]);
+        fixture.detectChanges();
+        
+        
+        flush();
+        const cardTitles = el.queryAll(By.css('.mat-tab-body-active .mat-card-title'));
+        expect(cardTitles.length).toBeGreaterThan(0);
+        expect(cardTitles[0].nativeElement.textContent).toContain('Angular Security Course');
+    }));
+
+    it('should display advanced courses when tab clicked - async', waitForAsync(() => {
+        coursesService.findAllCourses.and.returnValue(of(setupCourses()));
+        fixture.detectChanges();
+        const tabs = el.nativeElement.querySelectorAll('.mat-tab-label');
         click(tabs[1]);
         fixture.detectChanges();
 
-
-        setTimeout(() => {
-            const cardTitles = el.queryAll(By.css('.mat-card-title'));
-            console.log(cardTitles);
+        fixture.whenStable().then(() => {
+            const cardTitles = el.queryAll(By.css('.mat-tab-body-active .mat-card-title'));
             expect(cardTitles.length).toBeGreaterThan(0);
             expect(cardTitles[0].nativeElement.textContent).toContain('Angular Security Course');
-            done();
-        }, 500)
+        });
 
-    });
+    }));
 });
 
 

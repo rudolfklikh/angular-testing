@@ -22,7 +22,6 @@ fdescribe('CoursesService', () => {
     });
     it('should retrieve all courses', () => {
         courseService.findAllCourses().subscribe(courses => {
-            console.log(courses, 'COURSES');
             expect(courses).toBeTruthy('No courses returned');
             expect(courses.length).toBe(12, 'incorrect number of courses');
 

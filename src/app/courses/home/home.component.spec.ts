@@ -16,141 +16,84 @@ import {click} from '../common/test-utils';
 
 
 
-describe('HomeComponent', () => {
+fdescribe('HomeComponent', () => {
+    let fixture: ComponentFixture<HomeComponent>;
+    let component: HomeComponent;
+    let el: DebugElement;
+    let coursesService: any;
 
-  let fixture: ComponentFixture<HomeComponent>;
-  let component:HomeComponent;
-  let el: DebugElement;
-  let coursesService: any;
+    const beginnerCourses = setupCourses().filter(course => course.category === 'BEGINNER');
+    const advancedCourses = setupCourses().filter(course => course.category === 'ADVANCED');
+    beforeEach(waitForAsync(() => {
 
-  const beginnerCourses = setupCourses()
-      .filter(course => course.category == 'BEGINNER');
+        const coursesServiceSpy = jasmine.createSpyObj('CoursesService', ['findAllCourses']);
+        TestBed.configureTestingModule({
+            imports: [
+                CoursesModule,
+                NoopAnimationsModule
+            ],
+            providers: [
+                {provide: CoursesService, useValue: coursesServiceSpy}
+            ]
+        }).compileComponents().then(() => {
+            fixture = TestBed.createComponent(HomeComponent);
+            component = fixture.componentInstance;
+            el = fixture.debugElement;
+            coursesService = TestBed.get(CoursesService);
+        })
+    }));
 
-    const advancedCourses = setupCourses()
-        .filter(course => course.category == 'ADVANCED');
+    it('should create the component', () => {
+        expect(component).toBeTruthy();
+    });
 
+    it('should display only beginner courses', () => {
 
+        coursesService.findAllCourses.and.returnValue(of(beginnerCourses));
 
-  beforeEach(waitForAsync(() => {
+        fixture.detectChanges();
 
-      const coursesServiceSpy = jasmine.createSpyObj('CoursesService', ['findAllCourses'])
+        const tabs = el.queryAll(By.css('.mat-tab-label'));
+        expect(tabs.length).toBe(1, 'Unexpected number of tabs found');
+    });
 
-      TestBed.configureTestingModule({
-          imports: [
-              CoursesModule,
-              NoopAnimationsModule
-          ],
-          providers: [
-              {provide: CoursesService, useValue: coursesServiceSpy}
-          ]
-      }).compileComponents()
-          .then(() => {
-              fixture = TestBed.createComponent(HomeComponent);
-              component = fixture.componentInstance;
-              el = fixture.debugElement;
-              coursesService = TestBed.get(CoursesService);
-          });
+    it('should display only advanced courses', () => {
+       
+        coursesService.findAllCourses.and.returnValue(of(advancedCourses));
 
-  }));
+        fixture.detectChanges();
 
-  it("should create the component", () => {
+        const tabs = el.queryAll(By.css('.mat-tab-label'));
+        expect(tabs.length).toBe(1, 'Unexpected number of tabs found');
+    });
 
-    expect(component).toBeTruthy();
-
-  });
-
-
-  it("should display only beginner courses", () => {
-
-      coursesService.findAllCourses.and.returnValue(of(beginnerCourses));
-
-      fixture.detectChanges();
-
-      const tabs = el.queryAll(By.css(".mat-tab-label"));
-
-      expect(tabs.length).toBe(1, "Unexpected number of tabs found");
-
-  });
-
-
-  it("should display only advanced courses", () => {
-
-      coursesService.findAllCourses.and.returnValue(of(advancedCourses));
-
-      fixture.detectChanges();
-
-      const tabs = el.queryAll(By.css(".mat-tab-label"));
-
-      expect(tabs.length).toBe(1, "Unexpected number of tabs found");
-
-  });
-
-
-  it("should display both tabs", () => {
-
-      coursesService.findAllCourses.and.returnValue(of(setupCourses()));
-
-      fixture.detectChanges();
-
-      const tabs = el.queryAll(By.css(".mat-tab-label"));
-
-      expect(tabs.length).toBe(2, "Expected to find 2 tabs");
-
-  });
-
-
-  it("should display advanced courses when tab clicked - fakeAsync", fakeAsync(() => {
-
-      coursesService.findAllCourses.and.returnValue(of(setupCourses()));
-
-      fixture.detectChanges();
-
-      const tabs = el.queryAll(By.css(".mat-tab-label"));
-
-      click(tabs[1]);
-
-      fixture.detectChanges();
-
-      flush();
-
-      const cardTitles = el.queryAll(By.css('.mat-tab-body-active .mat-card-title'));
-
-      console.log(cardTitles);
-
-      expect(cardTitles.length).toBeGreaterThan(0,"Could not find card titles");
-
-      expect(cardTitles[0].nativeElement.textContent).toContain("Angular Security Course");
-
-  }));
-
-
-    it("should display advanced courses when tab clicked - async", waitForAsync(() => {
-
+    it('should display both tabs', () => {
         coursesService.findAllCourses.and.returnValue(of(setupCourses()));
 
         fixture.detectChanges();
 
-        const tabs = el.queryAll(By.css(".mat-tab-label"));
+        const tabs = el.queryAll(By.css('.mat-tab-label'));
+        expect(tabs.length).toBe(2, 'Unexpected number of tabs found');
+    });
 
+
+    it('should display advanced courses when tab clicked', (done: DoneFn) => {
+        coursesService.findAllCourses.and.returnValue(of(setupCourses()));
+        fixture.detectChanges();
+        const tabs = el.queryAll(By.css('.mat-tab-label'));
         click(tabs[1]);
-
         fixture.detectChanges();
 
-        fixture.whenStable().then(() => {
 
-            console.log("called whenStable() ");
+        setTimeout(() => {
+            const cardTitles = el.queryAll(By.css('.mat-card-title'));
+            console.log(cardTitles);
+            expect(cardTitles.length).toBeGreaterThan(0);
+            expect(cardTitles[0].nativeElement.textContent).toContain('Angular Security Course');
+            done();
+        }, 500)
 
-            const cardTitles = el.queryAll(By.css('.mat-tab-body-active .mat-card-title'));
-
-            expect(cardTitles.length).toBeGreaterThan(0,"Could not find card titles");
-
-            expect(cardTitles[0].nativeElement.textContent).toContain("Angular Security Course");
-
-        });
-
-    }));
-
-
+    });
 });
 
 
